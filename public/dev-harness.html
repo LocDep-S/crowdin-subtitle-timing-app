@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Dev harness - Video &amp; Timing panel (no Crowdin required)</title>
+<link rel="stylesheet" href="/public/panel.css" />
+<style>
+  body { background: #f7f8fb; }
+  #app { max-width: 720px; margin: 0 auto; height: auto; }
+  #dev-banner {
+    background: #fff3cd; color: #664d03; padding: 8px 12px; font: 12px/1.4 sans-serif;
+    border-bottom: 1px solid #ffe69c;
+  }
+  #lang-select { margin-left: 8px; }
+</style>
+</head>
+<body>
+  <div id="dev-banner">
+    Dev harness — loads <code>test/sample.srt</code> and the sample YouTube link directly in the
+    browser, no Crowdin install/OAuth needed. Switch the language dropdown to see that each
+    "language" keeps its own independent timing - editing French timing never touches English or
+    Spanish. (There's no real translation here, just the source text repeated per language, since
+    this harness has no Crowdin connection to pull real translations from.)
+  </div>
+  <div id="app">
+    <div id="player-wrap"><div id="player"></div></div>
+    <div id="toolbar">
+      <label for="lang-select">Language:</label>
+      <select id="lang-select">
+        <option value="en">en (source timing)</option>
+        <option value="fr">fr</option>
+        <option value="es">es</option>
+        <option value="de">de</option>
+      </select>
+      <span id="status"></span>
+      <button id="export-btn" class="primary">Export .srt for this language</button>
+    </div>
+    <ul id="cue-list"></ul>
+  </div>
+
+  <script>
+    const DEFAULT_VIDEO = "https://youtu.be/ht1psZMHvO4";
+    const state = { cues: [], perLanguage: {}, language: "en", player: null, playerReady: false, activeCueId: null };
+    const els = {
+      status: document.getElementById("status"),
+      cueList: document.getElementById("cue-list"),
+      exportBtn: document.getElementById("export-btn"),
+      langSelect: document.getElementById("lang-select"),
+    };
+    const setStatus = (m) => (els.status.textContent = m || "");
+
+    // ---- minimal inline SRT parse/stringify (mirrors lib/srt.js) ----
+    function timeToMs(t) {
+      const m = /(\d{2}):(\d{2}):(\d{2})[,.](\d{3})/.exec(t);
+      if (!m) return 0;
+      const [, hh, mm, ss, ms] = m;
+      return (+hh) * 3600000 + (+mm) * 60000 + (+ss) * 1000 + (+ms);
+    }
+    function msToTime(total) {
+      total = Math.max(0, Math.round(total));
+      const ms = total % 1000, s = Math.floor(total / 1000);
+      const ss = s % 60, mtot = Math.floor(s / 60), mm = mtot % 60, hh = Math.floor(mtot / 60);
+      const p = (n, l = 2) => String(n).padStart(l, "0");
+      return `${p(hh)}:${p(mm)}:${p(ss)},${p(ms, 3)}`;
+    }
+    function parseSrt(raw) {
+      const blocks = raw.replace(/\r\n/g, "\n").split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+      const cues = [];
+      for (const block of blocks) {
+        const lines = block.split("\n");
+        let cursor = 0;
+        if (/^\d+$/.test((lines[cursor] || "").trim())) cursor++;
+        const header = /(\d{2}:\d{2}:\d{2}[,.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,.]\d{3})/.exec(lines[cursor] || "");
+        if (!header) continue;
+        cursor++;
+        cues.push({ startMs: timeToMs(header[1]), endMs: timeToMs(header[2]), text: lines.slice(cursor).join("\n").trim() });
+      }
+      return cues;
+    }
+    function stringifySrt(cues) {
+      return cues.map((c, i) => `${i + 1}\n${msToTime(c.startMs)} --> ${msToTime(c.endMs)}\n${c.text}\n`).join("\n");
+    }
+
+    // ---- YouTube embed ----
+    function youTubeId(url) {
+      try {
+        const u = new URL(url);
+        if (u.hostname.includes("youtu.be")) return u.pathname.slice(1);
+        if (u.searchParams.get("v")) return u.searchParams.get("v");
+      } catch (e) {}
+      return null;
+    }
+    function mountPlayer(url) {
+      const videoId = youTubeId(url);
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(tag);
+      window.onYouTubeIframeAPIReady = () => {
+        state.player = new YT.Player("player", {
+          videoId,
+          playerVars: { rel: 0, modestbranding: 1 },
+          events: { onReady: () => { state.playerReady = true; startTimeSync(); } },
+        });
+      };
+    }
+    function seekTo(ms) { if (state.playerReady) state.player.seekTo(ms / 1000, true); }
+    function startTimeSync() {
+      setInterval(() => {
+        if (!state.playerReady) return;
+        const ms = state.player.getCurrentTime() * 1000;
+        const timings = state.perLanguage[state.language];
+        const active = state.cues.find((c) => ms >= timings[c.id].startMs && ms < timings[c.id].endMs);
+        highlightCue(active ? active.id : null);
+      }, 250);
+    }
+
+    // ---- rendering: timing only, per current language ----
+    function msToInput(ms) {
+      const t = Math.max(0, Math.round(ms));
+      const mm = String(Math.floor(t / 60000)).padStart(2, "0");
+      const ss = String(Math.floor((t % 60000) / 1000)).padStart(2, "0");
+      const mss = String(t % 1000).padStart(3, "0");
+      return `${mm}:${ss}.${mss}`;
+    }
+    function inputToMs(v) {
+      const m = /^(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?$/.exec(v.trim());
+      if (!m) return null;
+      return (+m[1]) * 60000 + (+m[2]) * 1000 + (+(m[3] || 0));
+    }
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+    }
+    function highlightCue(id) {
+      if (id === state.activeCueId) return;
+      state.activeCueId = id;
+      els.cueList.querySelectorAll(".cue").forEach((li) => li.classList.toggle("active", li.dataset.cueId === String(id)));
+    }
+    function render() {
+      const timings = state.perLanguage[state.language];
+      els.cueList.innerHTML = "";
+      state.cues.forEach((cue) => {
+        const t = timings[cue.id];
+        const li = document.createElement("li");
+        li.className = "cue" + (t.overridden ? " overridden" : "");
+        li.dataset.cueId = cue.id;
+        li.innerHTML = `
+          <div class="body">
+            <div class="times">
+              <button data-adj="-100" data-field="start">−</button>
+              <input data-field="start" value="${msToInput(t.startMs)}" />
+              <button data-adj="100" data-field="start">+</button>
+              <span>→</span>
+              <button data-adj="-100" data-field="end">−</button>
+              <input data-field="end" value="${msToInput(t.endMs)}" />
+              <button data-adj="100" data-field="end">+</button>
+              ${t.overridden ? '<span class="overridden-tag">custom timing</span>' : ""}
+            </div>
+            <div class="text">[${state.language}] ${escapeHtml(cue.text)}</div>
+          </div>`;
+        li.querySelector(".text").addEventListener("click", () => seekTo(t.startMs));
+        li.querySelectorAll("input[data-field]").forEach((input) =>
+          input.addEventListener("change", () => {
+            const ms = inputToMs(input.value);
+            if (ms === null) return;
+            if (input.dataset.field === "start") t.startMs = ms; else t.endMs = ms;
+            t.overridden = true;
+            render();
+          })
+        );
+        li.querySelectorAll("button[data-adj]").forEach((btn) =>
+          btn.addEventListener("click", () => {
+            const delta = parseInt(btn.dataset.adj, 10);
+            if (btn.dataset.field === "start") t.startMs = Math.max(0, t.startMs + delta);
+            else t.endMs = Math.max(t.startMs + 100, t.endMs + delta);
+            t.overridden = true;
+            render();
+          })
+        );
+        els.cueList.appendChild(li);
+      });
+    }
+
+    els.langSelect.addEventListener("change", () => {
+      state.language = els.langSelect.value;
+      render();
+      setStatus(`Switched to ${state.language} - its own independent timing.`);
+    });
+
+    els.exportBtn.addEventListener("click", () => {
+      const timings = state.perLanguage[state.language];
+      const cues = state.cues.map((c) => ({ startMs: timings[c.id].startMs, endMs: timings[c.id].endMs, text: c.text }));
+      const blob = new Blob([stringifySrt(cues)], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `sample.${state.language}.srt`;
+      a.click();
+    });
+
+    (async function init() {
+      const raw = await (await fetch("/dev/sample.srt")).text();
+      state.cues = parseSrt(raw).map((c, i) => ({ id: i + 1, ...c }));
+      ["en", "fr", "es", "de"].forEach((lang) => {
+        state.perLanguage[lang] = {};
+        state.cues.forEach((c) => {
+          state.perLanguage[lang][c.id] = { startMs: c.startMs, endMs: c.endMs, overridden: false };
+        });
+      });
+      render();
+      mountPlayer(DEFAULT_VIDEO);
+      setStatus(`${state.cues.length} cues loaded from sample.srt (dev mode, source/"en" timing).`);
+    })();
+  </script>
+</body>
+</html>

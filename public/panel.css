@@ -1,0 +1,195 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1f2430;
+  background: #fff;
+}
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+#video-setup {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f4f6fb;
+  border-bottom: 1px solid #e2e6ef;
+}
+#video-setup.hidden { display: none; }
+#video-setup input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #cdd4e0;
+  border-radius: 4px;
+}
+#video-setup button, #toolbar button {
+  padding: 6px 10px;
+  border: 1px solid #cdd4e0;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#toolbar button.primary {
+  background: #3a5ee8;
+  border-color: #3a5ee8;
+  color: #fff;
+}
+#toolbar button.primary:disabled {
+  background: #b7c2e6;
+  border-color: #b7c2e6;
+  cursor: not-allowed;
+}
+
+#player-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  background: #000;
+  flex-shrink: 0;
+}
+#player { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Burned-in overlay of the CURRENT TARGET LANGUAGE's cue text, synced to
+   playback (see panel.js's startTimeSync). YouTube's own caption track is
+   explicitly disabled (cc_load_policy: 0) so this is the only subtitle a
+   linguist sees - the source English text never appears here, only
+   whatever this language's cue list currently says (including unsaved
+   edits reflected in state.cues). The bar is a near-opaque black so it
+   also masks any English captions burned directly into the video pixels
+   itself, not just YouTube's soft-caption layer. */
+#subtitle-overlay {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 6%;
+  text-align: center;
+  pointer-events: none;
+  font-size: clamp(14px, 2.6vw, 22px);
+  line-height: 1.35;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+#subtitle-overlay:empty { display: none; }
+#subtitle-overlay span {
+  display: inline-block;
+  background: rgba(0, 0, 0, 0.82);
+  padding: 4px 10px;
+  border-radius: 3px;
+  white-space: pre-wrap;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #e2e6ef;
+}
+#status { flex: 1; color: #6b7280; font-size: 12px; }
+#lang-badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #eef2ff;
+  color: #3a5ee8;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.cue.overridden { border-left: 3px solid #16a34a; }
+.cue .overridden-tag {
+  font-size: 10px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-left: 4px;
+}
+/* Orange overlap warning - uses an inset box-shadow rather than border-left
+   so it can coexist with .overridden's/.active's own border-left colors
+   instead of one silently overriding the other. */
+.cue.overlap { background: #fff7ed; box-shadow: inset 3px 0 0 0 #f97316; }
+.cue .overlap-tag {
+  font-size: 10px;
+  color: #ea580c;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+#cue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.cue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #eef0f5;
+  cursor: default;
+}
+.cue.active { background: #eef2ff; border-left: 3px solid #3a5ee8; }
+.cue .handle {
+  cursor: grab;
+  color: #b0b6c3;
+  padding-top: 4px;
+  user-select: none;
+}
+.cue .body { flex: 1; min-width: 0; }
+.cue .times {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.cue .times input {
+  width: 92px;
+  font-size: 11px;
+  padding: 2px 4px;
+  border: 1px solid #cdd4e0;
+  border-radius: 3px;
+}
+.cue .times button {
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  border: 1px solid #cdd4e0;
+  background: #fafbfd;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+.cue .text {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  white-space: pre-wrap;
+  resize: vertical;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: 0 0 4px -4px;
+}
+.cue .text:hover, .cue .text:focus {
+  border-color: #cdd4e0;
+  background: #fafbfd;
+  outline: none;
+}
+.cue .cue-actions {
+  display: flex;
+  gap: 6px;
+}
+.cue .cue-actions button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #cdd4e0;
+  background: #fafbfd;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.cue .cue-actions button[data-action="delete"] {
+  color: #b91c1c;
+  border-color: #f3c9c9;
+}
+.cue.sortable-ghost { opacity: 0.4; }

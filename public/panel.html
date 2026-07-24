@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Video &amp; Timing</title>
+<link rel="stylesheet" href="/public/panel.css" />
+<!-- Must be loaded from Crowdin's CDN (cross-domain messaging bridge), not self-hosted -->
+<script src="https://cdn.crowdin.com/apps/dist/iframe.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="video-setup" class="hidden">
+      <label for="video-url-input">Video URL (YouTube)</label>
+      <input id="video-url-input" type="text" placeholder="https://youtu.be/..." />
+      <button id="video-url-save">Save</button>
+    </div>
+
+    <div id="player-wrap">
+      <div id="player"></div>
+      <div id="subtitle-overlay"></div>
+    </div>
+
+    <div id="toolbar">
+      <button id="change-video-btn" title="Set/change the source video for this file">Video…</button>
+      <span id="lang-badge"></span>
+      <span id="status"></span>
+      <button id="download-video-btn">Download video</button>
+      <button id="export-btn" class="primary">Export .srt</button>
+    </div>
+
+    <ul id="cue-list"></ul>
+  </div>
+
+  <script src="/public/panel.js"></script>
+</body>
+</html>

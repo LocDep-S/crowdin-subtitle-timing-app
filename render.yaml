@@ -1,0 +1,20 @@
+# Render Blueprint - documents how this service is configured. Not strictly
+# required if the service is created directly via Render's API (which is how
+# this was actually deployed - see README), but kept here so the service can
+# also be reconstructed from Render's dashboard ("New -> Blueprint") if ever
+# needed, and so the config is versioned alongside the code.
+services:
+  - type: web
+    name: crowdin-subtitle-timing-app
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PUBLIC_BASE_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_URL
+        sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
