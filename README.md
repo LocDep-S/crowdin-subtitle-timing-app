@@ -112,6 +112,23 @@ language's view in the app. If a file+language hasn't been customized (no
 clone/delete used yet), nothing changes: cues are still derived live from
 Crowdin exactly as before, and Crowdin's own views stay accurate.
 
+**Overflow past one field's size cap:** Crowdin caps a single custom field's
+value at 65,535 characters. The blob above holds *every* customized
+language for a file combined into one value, so a file with several
+customized languages (or just one language with a lot of cues) can cross
+that cap - every future clone/split/merge/delete write for the file would
+then fail outright with a `fieldValidationFailed` error, for every language,
+not just the one being edited. To keep working past that ceiling, once the
+combined JSON is too big for one field it's split across additional
+numbered fields ("Subtitle Language Cues 2", "-3", ...), created lazily only
+the first time a file actually needs them. Reading these back costs nothing
+extra: Crowdin already returns every custom field value on a file in the
+same API call this app already makes, so reassembly is just concatenating
+whichever chunk fields are present, in order, before parsing. If a file's
+data later shrinks back under one field's worth (e.g. cues get deleted),
+the now-unneeded higher-numbered fields are cleared rather than left
+holding stale data.
+
 ### Overlap warning
 
 Any two cues in the same language whose time ranges overlap (regardless of
