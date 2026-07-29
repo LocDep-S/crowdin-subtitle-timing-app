@@ -162,6 +162,51 @@ body {
   padding: 2px 6px;
   border-radius: 3px;
 }
+/* "Mark as Finished" bar - a second row under the main toolbar so it
+   doesn't crowd out the video/export/reimport controls. Kept visually
+   distinct (light green tint) since it's a workflow signal to Daniel, not
+   a per-cue editing action like everything below it. */
+#finish-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f7fdf9;
+  border-bottom: 1px solid #e2e6ef;
+}
+#finish-bar input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #cdd4e0;
+  border-radius: 4px;
+  font-size: 12px;
+}
+#finish-bar button {
+  padding: 6px 10px;
+  border: 1px solid #16a34a;
+  background: #16a34a;
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+#finish-bar #unfinish-btn {
+  background: #fff;
+  color: #6b7280;
+  border-color: #cdd4e0;
+}
+#finish-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: #16a34a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#finish-bar .hidden { display: none; }
+
 .cue.overridden { border-left: 3px solid #16a34a; }
 .cue .overridden-tag {
   font-size: 10px;

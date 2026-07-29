@@ -40,6 +40,7 @@
     player: null,
     playerReady: false,
     activeCueId: null,
+    finishStatus: { finished: false, finishedAt: null, finishedBy: null },
   };
 
   const els = {
@@ -57,6 +58,10 @@
     timeReadout: document.getElementById("time-readout"),
     playerWrap: document.getElementById("player-wrap"),
     fullscreenBtn: document.getElementById("fullscreen-btn"),
+    finishNameInput: document.getElementById("finish-name-input"),
+    finishBtn: document.getElementById("finish-btn"),
+    finishBadge: document.getElementById("finish-badge"),
+    unfinishBtn: document.getElementById("unfinish-btn"),
   };
 
   function setStatus(msg) {
@@ -589,6 +594,76 @@
     }
   });
 
+  // ---- Mark as Finished / Unfinish -------------------------------------------
+  //
+  // "Your name" is remembered per-browser via localStorage purely as a
+  // display convenience (shown in the badge and the Slack DM) - there's no
+  // reliable linguist identity available from Crowdin's Editor context (see
+  // README), so rather than guess at an undocumented JWT/context field, the
+  // linguist just types it once and it's remembered from then on.
+  const FINISH_NAME_STORAGE_KEY = "subtitleApp.finishName";
+  els.finishNameInput.value = localStorage.getItem(FINISH_NAME_STORAGE_KEY) || "";
+  els.finishNameInput.addEventListener("change", () => {
+    localStorage.setItem(FINISH_NAME_STORAGE_KEY, els.finishNameInput.value.trim());
+  });
+
+  function renderFinishStatus() {
+    const { finished, finishedAt, finishedBy } = state.finishStatus;
+    els.finishBtn.classList.toggle("hidden", finished);
+    els.finishBadge.classList.toggle("hidden", !finished);
+    els.unfinishBtn.classList.toggle("hidden", !finished);
+    if (finished) {
+      const who = finishedBy ? `by ${finishedBy} ` : "";
+      const when = finishedAt ? new Date(finishedAt).toLocaleString() : "";
+      els.finishBadge.textContent = `✓ Finished ${who}${when}`.trim();
+    }
+  }
+
+  async function loadFinishStatus(languageId) {
+    state.finishStatus = await apiGet("/api/finish-status", {
+      projectId: state.projectId,
+      fileId: state.fileId,
+      languageId,
+    });
+    renderFinishStatus();
+  }
+
+  els.finishBtn.addEventListener("click", async () => {
+    const finishedBy = els.finishNameInput.value.trim();
+    setStatus("Marking finished…");
+    try {
+      const result = await apiPost("/api/finish", {
+        projectId: state.projectId,
+        fileId: state.fileId,
+        languageId: state.languageId,
+        finishedBy,
+      });
+      await loadFinishStatus(state.languageId);
+      setStatus(
+        result.slack && result.slack.sent
+          ? "Marked finished - Daniel notified on Slack."
+          : "Marked finished (Slack notification not sent - see console/README)."
+      );
+    } catch (err) {
+      setStatus(`Could not mark finished: ${err.message}`);
+    }
+  });
+
+  els.unfinishBtn.addEventListener("click", async () => {
+    setStatus("Reopening…");
+    try {
+      await apiPost("/api/unfinish", {
+        projectId: state.projectId,
+        fileId: state.fileId,
+        languageId: state.languageId,
+      });
+      await loadFinishStatus(state.languageId);
+      setStatus("Reopened - make your changes, then Finish again when ready.");
+    } catch (err) {
+      setStatus(`Could not reopen: ${err.message}`);
+    }
+  });
+
   // ---- Active target language + reload on change ----------------------------
 
   async function loadForLanguage(languageId) {
@@ -603,6 +678,7 @@
     state.activeCueId = null;
     els.subtitleOverlay.innerHTML = "";
     setStatus(`${state.cues.length} cues loaded (${languageId}).`);
+    await loadFinishStatus(languageId);
   }
 
   function currentLanguageFromContext(context) {

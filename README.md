@@ -129,6 +129,43 @@ data later shrinks back under one field's worth (e.g. cues get deleted),
 the now-unneeded higher-numbered fields are cleared rather than left
 holding stale data.
 
+### Mark as Finished
+
+A "Mark as Finished" button (below the main toolbar) lets a linguist signal
+"I'm done with this file+language" - it marks that (file, language) finished
+in Crowdin (in the same per-language blob `lib/languageCues.js` already
+uses for customized cues - see "Overflow past one field's size cap" above)
+and best-effort DMs Daniel on Slack with the exported `.srt` attached
+directly to the message (not just a link).
+
+The button flips to a "✓ Finished by [name], [date]" badge plus an
+**Unfinish** button - Unfinish just clears the flag quietly (no
+notification), so a linguist can make further changes and click Finish
+again later, which re-sends the Slack DM with the updated file. Marking a
+file finished in Crowdin always succeeds even if the Slack DM fails or
+isn't configured - see below.
+
+There's no reliable linguist identity available from Crowdin's Editor
+context to auto-fill "finished by", so the panel has a plain "Your name"
+field, remembered per-browser (localStorage) after the first time it's
+typed.
+
+**Slack setup:** this uses a dedicated Slack bot ("Subtitle Finish
+Notifier", in the Sinch workspace), not Crowdin's own Slack integration or
+Zapier - plain Slack Incoming Webhooks can't attach real files (link-only),
+and Zapier wasn't reliable enough at the time to depend on for this. The
+bot needs two Render env vars to actually send anything:
+- `SLACK_BOT_TOKEN` - Bot User OAuth Token (`xoxb-...`) for the app, scopes
+  `chat:write`, `files:write`, `im:write`, `users:read`.
+- `SLACK_NOTIFY_USER_ID` - Slack member ID to DM (Daniel's is
+  `U02NPLAHSE6`).
+
+Both are optional by design (`lib/slackNotify.js`): if either is missing,
+marking a file finished still works, just without the Slack DM - useful
+since the bot's install into the Sinch workspace needs a workspace admin's
+approval (requested via "Request to Workspace Install" - Daniel isn't an
+admin there) before `SLACK_BOT_TOKEN` even exists.
+
 ### Overlap warning
 
 Any two cues in the same language whose time ranges overlap (regardless of

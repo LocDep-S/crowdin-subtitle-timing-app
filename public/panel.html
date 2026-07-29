@@ -31,6 +31,13 @@
       <button id="export-btn" class="primary">Export .srt</button>
     </div>
 
+    <div id="finish-bar">
+      <input id="finish-name-input" type="text" placeholder="Your name" title="Remembered on this device - shown in the finished badge and the Slack notification" />
+      <button id="finish-btn" title="Mark this file+language finished and notify Daniel via Slack, with the exported .srt attached">Mark as Finished</button>
+      <span id="finish-badge" class="hidden"></span>
+      <button id="unfinish-btn" class="hidden" title="Reopen this file+language so you can make further changes, then Finish again later">Unfinish</button>
+    </div>
+
     <ul id="cue-list"></ul>
   </div>
 

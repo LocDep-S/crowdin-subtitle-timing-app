@@ -8,6 +8,7 @@ const crowdin = require("./lib/crowdinApi");
 const timingField = require("./lib/timingField");
 const languageCues = require("./lib/languageCues");
 const srt = require("./lib/srt");
+const slackNotify = require("./lib/slackNotify");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -454,6 +455,87 @@ app.get("/api/export", requireJwt, async (req, res) => {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Content-Disposition", `attachment; filename="${name}"`);
     res.send(body);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/finish-status?projectId=&fileId=&languageId=&jwtToken=
+// Current "finished" marker for one file+language - see lib/languageCues.js
+// (readFinishStatus). Read on panel load/language switch so the badge/
+// button reflects reality instead of always starting blank.
+app.get("/api/finish-status", requireJwt, async (req, res) => {
+  try {
+    const { projectId, fileId, languageId } = req.query;
+    if (!languageId) return res.status(400).json({ error: "languageId is required" });
+    const domain = req.crowdinContext.domain;
+    const accessToken = await auth.getAccessToken(domain);
+    const file = await crowdin.getFile(accessToken, domain, projectId, fileId);
+    res.json(languageCues.readFinishStatus(file, languageId));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/finish { projectId, fileId, languageId, finishedBy, jwtToken }
+// Marks a file+language finished and best-effort DMs Daniel the exported
+// .srt on Slack (see lib/slackNotify.js). Marking finished in Crowdin
+// always succeeds even if the Slack DM fails/isn't configured yet (e.g.
+// the bot is still awaiting workspace admin approval) - a linguist's
+// "I'm done" shouldn't be silently lost because of an unrelated Slack
+// outage, so slack errors are reported back but don't fail the request.
+app.post("/api/finish", requireJwt, async (req, res) => {
+  try {
+    const { projectId, fileId, languageId, finishedBy } = req.body || {};
+    if (!languageId) return res.status(400).json({ error: "languageId is required" });
+    const domain = req.crowdinContext.domain;
+    const accessToken = await auth.getAccessToken(domain);
+
+    const file = await crowdin.getFile(accessToken, domain, projectId, fileId);
+    await languageCues.writeFinishStatus(axios, accessToken, domain, projectId, file, languageId, {
+      finished: true,
+      finishedBy,
+    });
+
+    let slackResult = { sent: false };
+    try {
+      const cues = await buildCues(accessToken, domain, projectId, fileId, languageId);
+      const body = srt.stringifySrt(cues.map((c) => ({ startMs: c.startMs, endMs: c.endMs, text: c.text })));
+      const name = `${file.name || "subtitles"}.${languageId}.srt`;
+      const who = finishedBy ? `${finishedBy} ` : "";
+      slackResult = await slackNotify.sendFinishedFile({
+        filename: name,
+        content: body,
+        comment: `${who}marked *${file.name}* (${languageId}) finished in Video & Timing.`,
+      });
+    } catch (slackErr) {
+      console.error("Slack notify failed:", slackErr.message);
+      slackResult = { sent: false, reason: slackErr.message };
+    }
+
+    res.json({ finished: true, slack: slackResult });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /api/unfinish { projectId, fileId, languageId, jwtToken }
+// Clears the finished flag - no notification, this is just "reopening" the
+// file so a linguist can make further changes and Finish again later.
+app.post("/api/unfinish", requireJwt, async (req, res) => {
+  try {
+    const { projectId, fileId, languageId } = req.body || {};
+    if (!languageId) return res.status(400).json({ error: "languageId is required" });
+    const domain = req.crowdinContext.domain;
+    const accessToken = await auth.getAccessToken(domain);
+
+    const file = await crowdin.getFile(accessToken, domain, projectId, fileId);
+    await languageCues.writeFinishStatus(axios, accessToken, domain, projectId, file, languageId, { finished: false });
+
+    res.json({ finished: false });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
