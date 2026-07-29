@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Video &amp; Timing</title>
+<link rel="stylesheet" href="/public/panel.css" />
+<!-- Must be loaded from Crowdin's CDN (cross-domain messaging bridge), not self-hosted -->
+<script src="https://cdn.crowdin.com/apps/dist/iframe.js"></script>
+</head>
+<body>
+  <div id="app">
+    <div id="video-setup" class="hidden">
+      <label for="video-url-input">Video URL (YouTube)</label>
+      <input id="video-url-input" type="text" placeholder="https://youtu.be/..." />
+      <button id="video-url-save">Save</button>
+    </div>
+
+    <div id="player-wrap">
+      <div id="player"></div>
+      <div id="subtitle-overlay"></div>
+      <div id="time-readout" title="Current playback position (mm:ss.mmm) - matches the format of the start/end fields below, so you can pause here and type this straight in">00:00.000</div>
+      <button id="fullscreen-btn" title="Fullscreen the video with your language's subtitles overlaid">⛶</button>
+    </div>
+
+    <div id="toolbar">
+      <button id="change-video-btn" title="Set/change the source video for this file">Video…</button>
+      <span id="lang-badge"></span>
+      <span id="status"></span>
+      <button id="reimport-btn" title="Pull fresh text from Crowdin for this language. Timing and any split/cloned cues are left untouched.">Reimport text</button>
+      <button id="download-video-btn">Download video</button>
+      <button id="export-btn" class="primary">Export .srt</button>
+    </div>
+
+    <ul id="cue-list"></ul>
+  </div>
+
+  <script src="/public/panel.js"></script>
+</body>
+</html>

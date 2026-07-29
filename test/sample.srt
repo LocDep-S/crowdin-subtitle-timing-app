@@ -1,0 +1,513 @@
+﻿1
+00:00:00,083 --> 00:00:02,210
+Hi everyone,and welcome 
+to “Shipped,”
+
+2
+00:00:02,210 --> 00:00:05,714
+our quarterly look at what we've been 
+building across the Sinch platform.
+
+3
+00:00:05,714 --> 00:00:09,092
+And more importantly,
+what does this mean for our customers?
+
+4
+00:00:21,104 --> 00:00:25,275
+This quarter we’ll focus on one of the
+biggest shifts happening in our industry,
+
+5
+00:00:25,316 --> 00:00:29,863
+AI moving from experimental
+into real world customer experiences.
+
+6
+00:00:30,238 --> 00:00:33,366
+I'm Roshni, Senior Director of Product
+Marketing at Sinch,
+
+7
+00:00:33,366 --> 00:00:37,662
+and joining me today is Jonathan,
+our Messaging VP of Product.
+
+8
+00:00:37,996 --> 00:00:38,997
+Thanks, Roshni.
+
+9
+00:00:38,997 --> 00:00:42,876
+So with the shift you mentioned towards
+AI powered customer experiences
+
+10
+00:00:42,876 --> 00:00:44,961
+the two things that matter most are:
+
+11
+00:00:44,961 --> 00:00:47,505
+how you reach people, and whether they trust
+
+12
+00:00:47,505 --> 00:00:49,132
+what they're actually receiving
+
+13
+00:00:49,132 --> 00:00:51,468
+And Sinch handles both at a global scale.
+
+14
+00:00:51,468 --> 00:00:55,388
+So today, we're unveiling the three
+most recent releases to help you deploy
+
+15
+00:00:55,430 --> 00:00:58,433
+AI comms confidently and quickly.
+
+16
+00:00:58,475 --> 00:00:59,934
+Okay. Thanks, Jonathan.
+
+17
+00:00:59,934 --> 00:01:01,061
+Let's get into it.
+
+18
+00:01:01,061 --> 00:01:03,563
+Starting with a new release 
+for Sinch tools.
+
+19
+00:01:08,318 --> 00:01:10,862
+Every time you add a new 
+capability to a project,
+
+20
+00:01:10,862 --> 00:01:12,113
+developers have to switch
+
+21
+00:01:12,113 --> 00:01:16,993
+between documentation, portals, testing
+tools, and application code.
+
+22
+00:01:16,993 --> 00:01:19,579
+This friction adds up quickly.
+
+23
+00:01:19,579 --> 00:01:22,957
+Sinch tools is here to 
+help remove that friction.
+
+24
+00:01:22,957 --> 00:01:26,544
+It is a suite of AI-native 
+developer capabilities
+
+25
+00:01:26,544 --> 00:01:28,463
+that help teams build,
+
+26
+00:01:28,463 --> 00:01:30,340
+test, and deploy on Sinch
+
+27
+00:01:30,340 --> 00:01:33,301
+within the tools they're 
+already using today.
+
+28
+00:01:33,301 --> 00:01:35,804
+Developers can pick and choose
+what tools they need
+
+29
+00:01:35,804 --> 00:01:37,305
+based on their use case.
+
+30
+00:01:37,305 --> 00:01:41,476
+At the foundation is MCP,
+which connects AI coding environments
+
+31
+00:01:41,476 --> 00:01:46,022
+like Claude Code and Cursor
+directly to Sinchs’ live API service.
+
+32
+00:01:46,022 --> 00:01:49,859
+When an agent generates code
+or drafts and integration,
+
+33
+00:01:49,859 --> 00:01:54,072
+it’s working from real requirements
+and current product definitions.
+
+34
+00:01:54,072 --> 00:01:57,408
+And then we have Skills,
+which provide the structured
+
+35
+00:01:57,408 --> 00:02:00,578
+product knowledge and 
+implementation expertise.
+
+36
+00:02:00,703 --> 00:02:03,039
+Parameters are configured correctly,
+
+37
+00:02:03,039 --> 00:02:05,291
+the recommended patterns are built in,
+
+38
+00:02:05,291 --> 00:02:08,545
+and the common edge cases
+are already accounted for.
+
+39
+00:02:08,586 --> 00:02:11,548
+Instead of guessing how you should 
+build these products,
+
+40
+00:02:11,548 --> 00:02:14,759
+agents operate from a trusted 
+product intelligence.
+
+41
+00:02:14,759 --> 00:02:16,761
+Once this code is generated,
+
+42
+00:02:16,761 --> 00:02:20,765
+CLI allows products
+to test, validate, and troubleshoot
+
+43
+00:02:20,807 --> 00:02:24,477
+directly from the terminal
+before anything reaches production.
+
+44
+00:02:24,519 --> 00:02:29,190
+Language-native SDKs
+accelerate implementation by eliminating
+
+45
+00:02:29,190 --> 00:02:33,153
+repetitive boilerplate, and providing
+production-ready building blocks.
+
+46
+00:02:33,153 --> 00:02:36,447
+And finally,
+we have Functions - which serves
+
+47
+00:02:36,447 --> 00:02:39,617
+as the execution layer
+for event-driven workflows.
+
+48
+00:02:39,617 --> 00:02:43,621
+Whether it's sending an SMS
+when a user signs up, escalating a
+
+49
+00:02:43,621 --> 00:02:48,293
+critical alert through voice, or triggering
+verifications during authentications,
+
+50
+00:02:48,293 --> 00:02:52,630
+Functions connects business events
+to customer interactions automatically.
+
+51
+00:02:52,672 --> 00:02:56,050
+Together, these tools create
+a complete developer workflow
+
+52
+00:02:56,134 --> 00:02:59,220
+that moves from idea to production faster.
+
+53
+00:02:59,304 --> 00:03:03,391
+AI agents and developers
+working from the same trusted foundation.
+
+54
+00:03:03,474 --> 00:03:06,936
+Next up, Jonathan is going to tell us
+about the next release,
+
+55
+00:03:06,936 --> 00:03:09,105
+Sinch Chat and Sinch Push.
+
+56
+00:03:16,237 --> 00:03:17,697
+So you've built your agent,
+
+57
+00:03:17,697 --> 00:03:19,490
+it can handle conversations,
+
+58
+00:03:19,490 --> 00:03:20,867
+and it knows your product,
+
+59
+00:03:20,867 --> 00:03:23,703
+but for customers
+to actually interact with the agent,
+
+60
+00:03:23,703 --> 00:03:26,706
+it needs to be on the channels
+they already use.
+
+61
+00:03:26,998 --> 00:03:30,668
+Sinch Chat and Sinch Push 
+give you two owned channels
+
+62
+00:03:30,668 --> 00:03:33,671
+to meet customers right where they are.
+
+63
+00:03:34,422 --> 00:03:37,425
+Sinch Chat turns your app or 
+your website into a
+
+64
+00:03:37,425 --> 00:03:39,344
+live two-way conversation.
+
+65
+00:03:39,344 --> 00:03:42,180
+Your AI agent handles the repetitive stuff,
+
+66
+00:03:42,222 --> 00:03:45,225
+your team handles the moments 
+that actually move the needle.
+
+67
+00:03:45,308 --> 00:03:48,978
+The customer never has to leave
+the session to get an answer.
+
+68
+00:03:48,978 --> 00:03:51,814
+Sinch Push is the re-engagement side.
+
+69
+00:03:51,814 --> 00:03:53,691
+So, someone drops off mid-session,
+
+70
+00:03:53,691 --> 00:03:56,903
+Push reaches them
+directly on their device.
+
+71
+00:03:56,903 --> 00:03:59,113
+It's opted-in, highly cost effective,
+
+72
+00:03:59,113 --> 00:04:00,198
+and there's no middleman.
+
+73
+00:04:00,198 --> 00:04:01,658
+To bring us home,
+
+74
+00:04:01,658 --> 00:04:04,827
+I'll hand it back over to Roshni
+to tell us about our next release,
+
+75
+00:04:04,827 --> 00:04:08,998
+Sinch Mailgun Inspect for 
+Salesforce Marketing Cloud Next.
+
+76
+00:04:15,004 --> 00:04:16,798
+More and more teams are using AI
+
+77
+00:04:16,798 --> 00:04:18,258
+to create email content,
+
+78
+00:04:18,258 --> 00:04:20,134
+which is great for productivity,
+
+79
+00:04:20,134 --> 00:04:22,220
+but it can increase the risk of triggering
+
+80
+00:04:22,220 --> 00:04:26,808
+spam filters, missing broken
+links, and failing accessibility checks.
+
+81
+00:04:26,849 --> 00:04:30,103
+Now that Mailgun Inspect is 
+directly available inside
+
+82
+00:04:30,103 --> 00:04:31,854
+Salesforce Marketing Cloud Next,
+
+83
+00:04:31,854 --> 00:04:33,898
+you can preview emails across
+
+84
+00:04:33,898 --> 00:04:37,110
+more than 100 devices and email clients,
+
+85
+00:04:37,110 --> 00:04:40,113
+without ever leaving the Salesforce UI.
+
+86
+00:04:40,196 --> 00:04:43,491
+Generic desktop and mobile previews
+give you a visual
+
+87
+00:04:43,491 --> 00:04:47,412
+representation
+of how email is expected to render.
+
+88
+00:04:47,412 --> 00:04:50,957
+Mailgun Inspect shows you
+exactly how it renders
+
+89
+00:04:50,957 --> 00:04:54,544
+on the email clients your 
+subscribers are using today,
+
+90
+00:04:54,544 --> 00:04:58,798
+and both in light and dark mode,
+
+91
+00:04:58,798 --> 00:05:02,385
+You can open up any preview
+at full resolution,
+
+92
+00:05:02,385 --> 00:05:04,887
+compare clients side-by-side,
+
+93
+00:05:04,887 --> 00:05:08,808
+make a change to the email,
+and watch it re-render in real time.
+
+94
+00:05:08,808 --> 00:05:12,186
+In addition,
+it offers link and image validation,
+
+95
+00:05:12,186 --> 00:05:15,982
+accessibility checks, and spam analysis.
+
+96
+00:05:15,982 --> 00:05:19,652
+And because it's now all available 
+in Sales Force Marketing Cloud Next,
+
+97
+00:05:19,652 --> 00:05:21,863
+teams can complete the entire
+
+98
+00:05:21,863 --> 00:05:25,116
+QA process where they're already
+building their campaigns,
+
+99
+00:05:25,116 --> 00:05:28,286
+spending less time exporting the code,
+
+100
+00:05:28,286 --> 00:05:29,495
+switching tools,
+
+101
+00:05:29,495 --> 00:05:31,706
+and moving between tabs.
+
+102
+00:05:31,706 --> 00:05:36,169
+You can find Mailgun Inspect
+on the Salesforce App Exchange today.
+
+103
+00:05:36,586 --> 00:05:38,838
+So that's it for our three releases.
+
+104
+00:05:38,838 --> 00:05:41,132
+We've brought you solid infrastructure
+to build on,
+
+105
+00:05:41,132 --> 00:05:42,759
+channels to deploy through,
+
+106
+00:05:42,759 --> 00:05:45,011
+and a quality layer to keep it trustworthy
+
+107
+00:05:45,011 --> 00:05:46,679
+once it's out in a wild.
+
+108
+00:05:46,679 --> 00:05:50,516
+You'll find a full breakdown of 
+documentation and more,
+
+109
+00:05:50,516 --> 00:05:52,560
+everything we've covered today,
+
+110
+00:05:52,560 --> 00:05:55,063
+at sinch.com/shipped
+
+111
+00:05:55,063 --> 00:05:57,273
+And we'll meet you back 
+here next quarter
+
+112
+00:05:57,273 --> 00:05:59,442
+to see what's shipped at Sinch.
+
+113
+00:05:59,442 --> 00:06:01,986
+Thanks for watching,
+everybody - ‘till next time.

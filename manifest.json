@@ -1,0 +1,39 @@
+{
+  "identifier": "subtitle-video-timing-editor",
+  "name": "Subtitle Video & Timing Editor",
+  "description": "Shows the source video next to the Crowdin Editor, synced to the cue you're translating, and lets you correct cue timing independently for each target language - without touching the English source file.",
+  "baseUrl": "https://YOUR_PUBLIC_HOST",
+  "authentication": {
+    "type": "crowdin_app",
+    "clientId": "5x8z8MXgIaiAyx6vy2n5"
+  },
+  "events": {
+    "installed": "/hooks/installed",
+    "uninstall": "/hooks/uninstall"
+  },
+  "scopes": [
+    "project.source",
+    "project.translation",
+    "field"
+  ],
+  "modules": {
+    "editor-right-panel": [
+      {
+        "key": "subtitle-video-timing-panel",
+        "name": "Video & Timing",
+        "url": "/panel",
+        "modes": [
+          "translate",
+          "comfortable",
+          "side-by-side",
+          "review"
+        ],
+        "supportsMultipleStrings": false,
+        "environments": [
+          "crowdin",
+          "crowdin-enterprise"
+        ]
+      }
+    ]
+  }
+}

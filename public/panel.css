@@ -1,0 +1,288 @@
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: #1f2430;
+  background: #fff;
+}
+#app { display: flex; flex-direction: column; height: 100vh; }
+
+#video-setup {
+  display: flex;
+  gap: 6px;
+  padding: 8px;
+  background: #f4f6fb;
+  border-bottom: 1px solid #e2e6ef;
+}
+#video-setup.hidden { display: none; }
+#video-setup input {
+  flex: 1;
+  padding: 6px 8px;
+  border: 1px solid #cdd4e0;
+  border-radius: 4px;
+}
+#video-setup button, #toolbar button {
+  padding: 6px 10px;
+  border: 1px solid #cdd4e0;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+#toolbar button.primary {
+  background: #3a5ee8;
+  border-color: #3a5ee8;
+  color: #fff;
+}
+#toolbar button.primary:disabled {
+  background: #b7c2e6;
+  border-color: #b7c2e6;
+  cursor: not-allowed;
+}
+
+#player-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+  background: #000;
+  flex-shrink: 0;
+}
+#player { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* Burned-in overlay of the CURRENT TARGET LANGUAGE's cue text, synced to
+   playback (see panel.js's startTimeSync). cc_load_policy: 0 only sets
+   YouTube's DEFAULT caption state - it can't stop a linguist's own YouTube/
+   Google account "always show captions" preference, or a manual click on
+   the CC button still present in YouTube's own control bar (there is no
+   documented playerVar to remove that button the way `fs` removes
+   fullscreen). So rather than relying on YouTube never showing English
+   captions, this bar is a solid, fully-opaque, FULL-WIDTH band across the
+   same bottom zone YouTube renders captions in - if YouTube's own caption
+   does get triggered underneath, this reliably paints over the whole area
+   instead of sitting next to/overlapping it as a narrower, translucent
+   pill would. It only appears while there's an active cue (see
+   `:empty` below), same as a normal caption track. */
+#subtitle-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  box-sizing: border-box;
+  min-height: 16%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 10px 6% 14px;
+  text-align: center;
+  pointer-events: none;
+  font-size: clamp(14px, 2.6vw, 22px);
+  line-height: 1.35;
+  color: #fff;
+  background: #000;
+  white-space: pre-wrap;
+}
+#subtitle-overlay:empty { display: none; }
+
+/* Live playback timecode, top-left of the video - lets a linguist pause on
+   an exact frame and read the millisecond-precise position straight off,
+   in the SAME mm:ss.mss format the start/end inputs below use (see
+   msToInputValue in panel.js), so it can be typed in directly instead of
+   estimated by eye. Updates on the same poll as the subtitle overlay/active
+   cue highlight (see startTimeSync) - this also means it keeps working
+   correctly while the video is paused, not just while playing. */
+#time-readout {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font: 12px/1 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+/* Custom fullscreen control - see panel.js. YouTube's own fullscreen button
+   is disabled (playerVars.fs = 0) because it fullscreens only the iframe
+   itself, leaving #subtitle-overlay (a sibling, not inside the iframe)
+   behind. This button fullscreens #player-wrap instead, so the video AND
+   the overlay go fullscreen together. */
+#fullscreen-btn {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+#fullscreen-btn:hover { background: rgba(0, 0, 0, 0.8); }
+
+/* While #player-wrap is the fullscreened element, let it fill the whole
+   screen instead of keeping the 16:9 padding-top hack (which only sizes
+   height off the box's own width) - #player and #subtitle-overlay already
+   fill this box via inset/percentage positioning, so they scale correctly.
+   The overlay's text also gets a bigger clamp range, matching how native
+   video captions scale up in true fullscreen. */
+#player-wrap:fullscreen,
+#player-wrap:-webkit-full-screen {
+  width: 100%;
+  height: 100%;
+  padding-top: 0;
+}
+#player-wrap:fullscreen #subtitle-overlay,
+#player-wrap:-webkit-full-screen #subtitle-overlay {
+  font-size: clamp(20px, 3.5vw, 48px);
+}
+#player-wrap:fullscreen #time-readout,
+#player-wrap:-webkit-full-screen #time-readout {
+  font-size: 16px;
+  padding: 5px 10px;
+}
+
+#toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #e2e6ef;
+}
+#status { flex: 1; color: #6b7280; font-size: 12px; }
+#lang-badge {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: #eef2ff;
+  color: #3a5ee8;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.cue.overridden { border-left: 3px solid #16a34a; }
+.cue .overridden-tag {
+  font-size: 10px;
+  color: #16a34a;
+  font-weight: 600;
+  margin-left: 4px;
+}
+/* Orange overlap warning - uses an inset box-shadow rather than border-left
+   so it can coexist with .overridden's/.active's own border-left colors
+   instead of one silently overriding the other. */
+.cue.overlap { background: #fff7ed; box-shadow: inset 3px 0 0 0 #f97316; }
+.cue .overlap-tag {
+  font-size: 10px;
+  color: #ea580c;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+#cue-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+.cue {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid #eef0f5;
+  cursor: default;
+}
+.cue.active { background: #eef2ff; border-left: 3px solid #3a5ee8; }
+.cue .handle {
+  cursor: grab;
+  color: #b0b6c3;
+  padding-top: 4px;
+  user-select: none;
+}
+.cue .body { flex: 1; min-width: 0; }
+.cue .times {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.cue .times input {
+  width: 92px;
+  font-size: 11px;
+  padding: 2px 4px;
+  border: 1px solid #cdd4e0;
+  border-radius: 3px;
+}
+.cue .times button {
+  width: 20px;
+  height: 20px;
+  line-height: 1;
+  border: 1px solid #cdd4e0;
+  background: #fafbfd;
+  border-radius: 3px;
+  cursor: pointer;
+  padding: 0;
+}
+.cue .text {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 13px;
+  color: inherit;
+  white-space: pre-wrap;
+  resize: vertical;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  padding: 2px 4px;
+  margin: 0 0 4px -4px;
+}
+.cue .text:hover, .cue .text:focus {
+  border-color: #cdd4e0;
+  background: #fafbfd;
+  outline: none;
+}
+.cue .cue-actions {
+  display: flex;
+  gap: 6px;
+}
+.cue .cue-actions button {
+  font-size: 11px;
+  padding: 2px 8px;
+  border: 1px solid #cdd4e0;
+  background: #fafbfd;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.cue .cue-actions button[data-action="delete"] {
+  color: #b91c1c;
+  border-color: #f3c9c9;
+}
+.cue.sortable-ghost { opacity: 0.4; }
+
+/* Character-count column, to the right of each cue's text (see
+   cueCharCountHtml in panel.js). Fixed width and right-aligned so the
+   numbers form a scannable column down the panel rather than shifting with
+   each cue's text length. Per-line rows only appear for multi-line cues;
+   the total always shows and is visually set apart (border-top + bolder)
+   since it's the one number relevant to every cue, multi-line or not. */
+.cue .char-info {
+  flex-shrink: 0;
+  width: 56px;
+  padding-top: 4px;
+  text-align: right;
+  font: 11px/1.6 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  color: #8b93a3;
+}
+.cue .char-info .char-line { white-space: nowrap; }
+.cue .char-info .char-total {
+  margin-top: 2px;
+  padding-top: 2px;
+  border-top: 1px solid #eef0f5;
+  color: #4b5363;
+  font-weight: 600;
+}

@@ -1,0 +1,29 @@
+name: Keep Render instance awake
+
+# Render's free tier spins the app down after ~15 minutes with no inbound
+# traffic, so the first real request after that pays a 30-90s+ cold-start
+# cost - annoying for linguists who don't know that's expected. This runs
+# on GitHub's own infrastructure (not the app's host, and not anyone's
+# laptop), so it keeps working nights/weekends regardless of who's online.
+#
+# Not an officially supported Render feature - just an inbound HTTP request
+# on a schedule, same as a browser tab hitting the URL. If Sinch outgrows
+# this (heavier traffic, need for zero cold starts ever), the supported fix
+# is upgrading the Render service to a paid instance type instead.
+on:
+  schedule:
+    # Every 10 minutes, comfortably under Render's 15-minute idle timeout.
+    # GitHub Actions cron can slip a few minutes under load, so 10 (not 14)
+    # leaves margin.
+    - cron: "*/10 * * * *"
+  # Lets you trigger a one-off run manually from the Actions tab to test it.
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping the app
+        run: |
+          curl -sS -o /dev/null -w "HTTP %{http_code} in %{time_total}s\n" \
+            https://crowdin-subtitle-timing-app.onrender.com/manifest.json
