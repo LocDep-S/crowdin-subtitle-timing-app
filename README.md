@@ -166,6 +166,24 @@ since the bot's install into the Sinch workspace needs a workspace admin's
 approval (requested via "Request to Workspace Install" - Daniel isn't an
 admin there) before `SLACK_BOT_TOKEN` even exists.
 
+### Reupload .srt
+
+For linguists who'd rather edit in a dedicated subtitle tool than this
+panel: **Export .srt** to get the current file, edit it anywhere, then
+**Reupload .srt** to bring it back into Crowdin wholesale. Text, timing,
+order, and cue count all come straight from the uploaded file - cues can be
+freely added, removed, reordered, or merged externally and this just
+replaces everything for that language with whatever the file says.
+
+There's no way to map an arbitrarily-edited file's lines back to the
+specific Crowdin source strings they may have started from, so - exactly
+like clone/split/delete - this fully "customizes" the (file, language):
+every read/write for it goes through this app's own per-language storage
+from here on, not Crowdin's source strings/translations (see "Customized
+cue lists" above for the full trade-off). Because this replaces the entire
+cue list in one shot rather than editing one cue, the panel asks for
+confirmation before doing it.
+
 ### Overlap warning
 
 Any two cues in the same language whose time ranges overlap (regardless of

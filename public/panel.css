@@ -38,6 +38,11 @@ body {
   border-color: #b7c2e6;
   cursor: not-allowed;
 }
+/* The actual file picker (#reupload-input) is invisible - "Reupload .srt"
+   is a normal toolbar button that programmatically clicks it (see
+   panel.js), so the OS's native file-input styling never shows up
+   mismatched next to the other toolbar buttons. */
+#reupload-input.hidden { display: none; }
 
 #player-wrap {
   position: relative;

@@ -53,6 +53,8 @@
     reimportBtn: document.getElementById("reimport-btn"),
     downloadVideoBtn: document.getElementById("download-video-btn"),
     exportBtn: document.getElementById("export-btn"),
+    reuploadBtn: document.getElementById("reupload-btn"),
+    reuploadInput: document.getElementById("reupload-input"),
     cueList: document.getElementById("cue-list"),
     subtitleOverlay: document.getElementById("subtitle-overlay"),
     timeReadout: document.getElementById("time-readout"),
@@ -524,6 +526,48 @@
       setStatus("Text reimported from Crowdin.");
     } catch (err) {
       setStatus(`Could not reimport text: ${err.message}`);
+    }
+  });
+
+  // ---- Reupload .srt -----------------------------------------------------
+  // For linguists who'd rather edit in a dedicated subtitle tool: download
+  // via Export, work on it elsewhere, then bring it back here wholesale.
+  // Like clone/split/delete, this fully "customizes" the (file, language) -
+  // there's no way to map an externally-edited file's lines back to
+  // specific Crowdin source strings (see server.js's /api/cues/reupload).
+
+  els.reuploadBtn.addEventListener("click", () => {
+    els.reuploadInput.click();
+  });
+
+  els.reuploadInput.addEventListener("change", async () => {
+    const file = els.reuploadInput.files[0];
+    els.reuploadInput.value = ""; // reset so picking the same file again still fires "change"
+    if (!file) return;
+
+    if (
+      !confirm(
+        `Replace ALL cues for ${state.languageId} with the contents of "${file.name}"?\n\nText, timing, order, and cue count will all come from this file - anything not reflected in it (including any manual splits/clones/deletes made here) will be gone. This can't be undone from within the app.`
+      )
+    ) {
+      return;
+    }
+
+    setStatus(`Reading ${file.name}…`);
+    try {
+      const srtText = await file.text();
+      setStatus("Uploading and replacing cues…");
+      const result = await apiPost("/api/cues/reupload", {
+        projectId: state.projectId,
+        fileId: state.fileId,
+        languageId: state.languageId,
+        srtText,
+      });
+      state.cues = result.cues;
+      renderCues();
+      setStatus(`Replaced cues from ${file.name} (${result.cues.length} cues).`);
+    } catch (err) {
+      setStatus(`Reupload failed: ${err.message}`);
     }
   });
 

@@ -436,6 +436,52 @@ app.post("/api/cues/reimport-text", requireJwt, async (req, res) => {
   }
 });
 
+// POST /api/cues/reupload  { projectId, fileId, languageId, srtText, jwtToken }
+// Lets a linguist edit the exported .srt in another tool (e.g. a dedicated
+// subtitle editor) and bring it back into Crowdin wholesale - text, timing,
+// order, and cue count all come straight from the uploaded file.
+//
+// There's no way to map an arbitrarily-edited file's lines back to the
+// specific Crowdin source strings they may have started from (cues can be
+// added, removed, reordered, or merged outside this app entirely), so - like
+// clone/split/delete - this fully "customizes" the (file, language): every
+// read/write for it goes through this app's own per-language storage from
+// here on, not Crowdin's source strings/translations. Same trade-off as
+// clone/delete, just triggered by a whole-file replace instead of one cue
+// at a time.
+app.post("/api/cues/reupload", requireJwt, async (req, res) => {
+  try {
+    const { projectId, fileId, languageId, srtText } = req.body || {};
+    if (!languageId) return res.status(400).json({ error: "languageId is required" });
+    if (!srtText || !srtText.trim()) return res.status(400).json({ error: "Uploaded file is empty" });
+
+    const parsed = srt.parseSrt(srtText);
+    if (!parsed.length) {
+      return res
+        .status(400)
+        .json({ error: "Could not find any subtitle cues in the uploaded file - check it's a valid .srt" });
+    }
+
+    const domain = req.crowdinContext.domain;
+    const accessToken = await auth.getAccessToken(domain);
+    const file = await crowdin.getFile(accessToken, domain, projectId, fileId);
+
+    const cues = parsed.map((c, i) => ({
+      id: `upload-${i}-${Date.now()}`,
+      sourceStringId: null,
+      startMs: c.startMs,
+      endMs: c.endMs,
+      text: c.text,
+    }));
+
+    await languageCues.writeForLanguage(axios, accessToken, domain, projectId, file, languageId, cues);
+    res.json({ cues: cues.map((c) => ({ ...c, isOverridden: true, isCustom: true })) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/export?projectId=&fileId=&languageId=&jwtToken=
 // Assembles the final, correctly-timed .srt for one language and returns
 // it as a download. This - not Crowdin's own "Download translations" - is
