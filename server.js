@@ -25,6 +25,9 @@ app.get("/manifest.json", (req, res) => {
   res.json({ ...manifest, baseUrl });
 });
 
+// Lightweight health check; reads Redis once so the Upstash database stays active.
+app.get("/health", async (req, res) => { try { await store.getInstallations(); res.json({ ok: true }); } catch (e) { res.status(500).json({ ok: false }); } });
+
 // -----------------------------------------------------------------------
 // Install / uninstall lifecycle hooks
 // -----------------------------------------------------------------------
