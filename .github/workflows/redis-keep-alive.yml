@@ -1,0 +1,12 @@
+# Weekly ping so the free-tier Upstash Redis database never looks inactive.
+name: Keep Upstash Redis active
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health endpoint
+        run: curl -sS -f --max-time 120 --retry 2 https://crowdin-subtitle-timing-app.onrender.com/health
